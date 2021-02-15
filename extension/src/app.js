@@ -58,7 +58,7 @@ function boot () {
     } else if (_.endsWith(window.location.origin, 'youtube.com')) {
         // this get executed only on youtube.com
         console.log(`yttrex version ${config.VERSION}`);
-        console.log(config);
+        console.log(JSON.stringify(config));
 
         // Register all the event handlers.
         // An event handler is a piece of code responsible for a specific task.
@@ -68,7 +68,7 @@ function boot () {
         // Lookup the current user and decide what to do.
         localLookup(response => {
             // `response` contains the user's public key, we save it global for the blinks
-            console.log("app.js gets", response, "from localLookup");
+            console.log("app.js gets", JSON.stringify(response, undefined, 2), "from localLookup");
 
             /* these parameters are loaded from localstorage */
             config.publicKey = response.publicKey;
@@ -166,12 +166,12 @@ function sizeCheck(nodeHTML, selector) {
         size: s,
         randomUUID
     });
-    console.log("->",
+    /* console.log("->",
         _.size(sizecache),
         "new href+content sent, selector", selector,
         Date(), "size", s,
         sizecache,
-    );
+    ); */
     return true;
 }
 
