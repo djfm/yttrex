@@ -24,14 +24,6 @@ console.log(redOn + "ઉ nconf loaded, using " + cfgFile + redOff);
 if(!nconf.get('interface') || !nconf.get('port') )
     throw new Error("check your config/settings.json, config of 'interface' and 'post' missing");
 
-var returnHTTPError = function(req, res, funcName, where) {
-    debug("%s HTTP error 500 %s [%s]", req.randomUnicode, funcName, where);
-    res.status(500);
-    res.send();
-    return false;
-};
-
-
 /* This function wraps all the API call, checking the verionNumber
  * managing error in 4XX/5XX messages and making all these asyncronous
  * I/O with DB, inside this Bluebird */
@@ -40,7 +32,9 @@ function dispatchPromise(name, req, res) {
     const func = _.get(APIs.implementations, name, null);
     if(_.isNull(func)) {
         debug("Invalid function request %s", name);
-        return returnHTTPError(req, res, name, "function not found?");
+        res.status(404);
+        res.send("function not found");
+        return false;
     }
     return new Promise.resolve(func(req)).then(function(httpresult) {
 
@@ -50,7 +44,8 @@ function dispatchPromise(name, req, res) {
             });
 
         if(httpresult.json) {
-            debug("%s API success, returning JSON (%d bytes)", name, _.size(JSON.stringify(httpresult.json)) );
+            debug("%s API success, returning JSON (%d bytes)",
+                name, _.size(JSON.stringify(httpresult.json)) );
             res.setHeader('Access-Control-Allow-Origin', '*');
             res.json(httpresult.json);
         } else if(httpresult.text) {
@@ -58,13 +53,17 @@ function dispatchPromise(name, req, res) {
             res.send(httpresult.text);
         } else {
             debug("Undetermined failure in API call, result →  %j", httpresult);
-            return returnHTTPError(req, res, name, "Undetermined failure");
+            res.status(502);
+            res.send("Error?");
+            return false;
         }
         return true;
     })
     .catch(function(error) {
-        debug("%s Trigger an Exception %s: %s", req.randomUnicode, name, error);
-        return returnHTTPError(req, res, name, "Exception");
+        debug("%s Trigger an Exception: %s", name, error);
+        res.status(501);
+        res.send(error.message);
+        return false;
     });
 };
 
@@ -73,6 +72,7 @@ server.listen(nconf.get('port'), nconf.get('interface'));
 console.log(" Listening on http://" + nconf.get('interface') + ":" + nconf.get('port'));
 /* configuration of express4 */
 app.use(cors());
+app.options('/api/', cors())
 app.use(bodyParser.json({limit: '6mb'}));
 app.use(bodyParser.urlencoded({limit: '6mb', extended: true}));
 
@@ -119,6 +119,17 @@ app.get('/api/v1/personal/:publicKey/related/:paging?', function(req, res) {
     return dispatchPromise('getPersonalRelated', req, res);
 });
 
+/* record answers from surveys */
+app.post('/api/v1/recordAnswers', function(req, res) {
+    return dispatchPromise("recordAnswers", req, res);
+});
+app.get('/api/v1/retrieveAnswers/:key', function(req, res) {
+    return dispatchPromise("retrieveAnswers", req, res);
+});
+app.get('/api/v1/retrieveAnswersCSV/:qName/:key', function(req, res) {
+    return dispatchPromise("retrieveAnswersCSV", req, res);
+});
+
 /* researcher */
 app.get('/api/v1/wetest/:key/:filter', function(req, res) {
     return dispatchPromise('researcher', req, res);
@@ -162,7 +173,46 @@ app.get('/api/v1/mirror/:key', function(req, res) {
     return dispatchPromise('getMirror', req, res);
 });
 
-/* impact --- the only one in version 2 already */
+/* handshake should be renamed for youchoose functionality */
+app.post('/api/v3/handshake', function(req, res) {
+    return dispatchPromise('youChooseByVideoId', req, res);
+});
+app.get('/api/v3/video/:videoId/recommendations', function(req, res) {
+    return dispatchPromise('youChooseByVideoId', req, res);
+});
+app.get('/api/v3/recommendations/:ids', function(req, res) {
+    return dispatchPromise('recommendationById', req, res);
+});
+
+app.post('/api/v3/creator/updateVideo', function(req, res) {
+    return dispatchPromise('updateVideoRec', req, res);
+});
+app.post('/api/v3/creator/ogp', cors(), function(req, res) {
+    return dispatchPromise('ogpProxy', req, res);
+});
+app.get('/api/v3/creator/videos/:publicKey', function(req, res) {
+    return dispatchPromise('getVideoByCreators', req, res);
+});
+app.get('/api/v3/creator/recommendations/:publicKey', function(req, res) {
+    return dispatchPromise('youChooseByProfile', req, res);
+});
+app.get('/api/v3/creator/register/:channelId', function(req, res) {
+    return dispatchPromise('creatorRegister', req, res);
+});
+
+/* tDBDHS */
+app.post('/api/v3/chiaroscuro', function(req, res) {
+    return dispatchPromise('chiaroScuro', req, res);
+})
+app.get('/api/v3/chiaroscuro/:experimentId/:nickname', function(req, res) {
+    return dispatchPromise('chiaroScuroDirective', req, res);
+})
+app.post('/api/v2/handshake', function(req, res) {
+    return dispatchPromise('experimentChannel3', req, res)
+})
+/* ^^^^^^^^^^^^^^^^^^^^^^^^^^ */
+
+/* impact */
 app.get('/api/v2/statistics/:name/:unit/:amount', function(req, res) {
     return dispatchPromise('getStatistics', req, res);
 });
@@ -184,6 +234,9 @@ app.post('/api/v2/profile/:publicKey', (req, res) => {
 });
 
 /* to get results of search queries! */
+app.get('/api/v2/searches/:idList/dot', (req, res) => {
+    return dispatchPromise('getSearchesDot', req, res);
+});
 app.get('/api/v2/searches/:query/CSV', (req, res) => {
     return dispatchPromise('getSearchesCSV', req, res);
 });
@@ -205,6 +258,34 @@ app.post('/api/v2/campaigns/:key', (req, res) => {
     return dispatchPromise('updateCampaigns', req, res);
 });
 
+/* guardoni support APIs */
+app.post('/api/v2/experiment/opening', (req, res) => {
+    // this is the fourth way tested to track experiments 
+    return dispatchPromise('experimentOpening', req, res);
+});
+app.post('/api/v2/experiment', (req, res) => {
+    return dispatchPromise('experimentSubmission', req, res);
+});
+app.get('/api/v2/experiment/:expname/csv', (req, res) => {
+    return dispatchPromise('experimentCSV', req, res);
+});
+app.get('/api/v2/experiment/:expname/dot', cors(), (req, res) => {
+    return dispatchPromise('experimentDOT', req, res);
+});
+app.get('/api/v2/experiment/:expname/json', cors(), (req, res) => {
+    return dispatchPromise('experimentJSON', req, res);
+});
+app.get('/api/v2/guardoni/list', (req, res) => {
+    return dispatchPromise('getAllExperiments', req, res);
+});
+// dynamically configured and retrived guardoni settings 
+app.post('/api/v2/guardoni/:experiment/:botname', (req, res) => {
+    return dispatchPromise('guardoniConfigure', req, res);
+});
+app.get('/api/v2/guardoni/:experiment/:botname', (req, res) => {
+    return dispatchPromise('guardoniGenerate', req, res);
+});
+
 /* security checks = is the password set and is not the default? (more checks might come) */
 security.checkKeyIsSet();
 
@@ -212,7 +293,7 @@ Promise.resolve().then(function() {
     if(dbutils.checkMongoWorks()) {
         debug("mongodb connection works");
     } else {
-        console.log("mongodb is not running - check", cfgFile,"- quitting");
+        console.log("mongodb is not running - check", cfgFile," - quitting");
         process.exit(1);
     }
 });

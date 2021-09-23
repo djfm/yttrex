@@ -29,20 +29,28 @@ async function getLimitedDistinct(cName, field, maxAmount, filter) {
     }
 }
 
-async function getCampaignQuery(campaignColumn, queriesColumn, campaignName) {
-    const MAXAMOUNT = 6000;
+async function getCampaignQuery(campaignColumn, queriesColumn, campaignName, optionalFilter) {
+    const MAXAMOUNT = 20000; // maximum amount of search queries looked (hardcoded limit)
     try {
         const mongoc = await mongo3.clientConnect({concurrency: 1});
         const r = await mongo3.read(mongoc, campaignColumn, { name: campaignName });
-        if(!r || !_.size(r) || !r[0]._id )
+        if(!r || !_.size(r) || !r[0]._id ) {
+            await mongoc.close();
             return false;
+        }
 
-        const campaign = _.first(r)
+        const campaign = _.first(r);
         debug("getCampaignQuery - campaign retrieved %s, with %d queries", campaign.name, _.size(campaign.queries));
-        const results = await mongo3.readLimit(mongoc, queriesColumn, {
+        const filter = {
             searchTerms: { "$in": campaign.queries },
             savingTime: { "$gte": campaign.startDate, "$lte": campaign.endDate }
-        }, {}, MAXAMOUNT, 0);
+        };
+
+        if(optionalFilter)
+            debug("experimental feature for Dot format: %j", _.extend(filter, optionalFilter) );
+
+        const results = await mongo3.readLimit(mongoc, queriesColumn, optionalFilter ?
+            _.extend(filter, optionalFilter) : filter, {}, MAXAMOUNT, 0);
         const refined = _.map(_.groupBy(results, 'searchTerms'), function(qlist, searchTerms) {
             // this is ready for table visualization 
             const rv = {
@@ -53,6 +61,8 @@ async function getCampaignQuery(campaignColumn, queriesColumn, campaignName) {
             rv.total = _.sum(rv.searches);
             return rv;
         });
+        debug("getCampaingQuery collected %d term queries, from non-unique source of %d totals %j",
+            _.size(refined), _.size(results), _.map(refined, 'total') );
         const contributors = _.size(_.keys(_.countBy(results, 'publicKey')));
         await mongoc.close();
         return {
@@ -65,7 +75,8 @@ async function getCampaignQuery(campaignColumn, queriesColumn, campaignName) {
                 overflow: (_.size(results) == MAXAMOUNT)
         }};
     } catch(error) {
-        debug("getCampaignQuery - failure in db access (getCampaignQuery %s): %s", campaignName, error.message);
+        debug("getCampaignQuery: failure in db access (getCampaignQuery %s): %s", campaignName, error.message);
+        // remember, mongoc isn't close in this case, I wonder if many of this condition might trigger any exhaustion
         return false;
     }
 }
@@ -98,7 +109,7 @@ async function writeCampaigns(cName, listof, kname) {
 }
 
 async function getAggregatedByTerm(cName, campaign, term) {
-    debugger;
+    // not currently used
     try {
         const mongoc = await mongo3.clientConnect({concurrency: 1});
         const results = await mongo3.aggregate(mongoc, cName, [
@@ -136,12 +147,17 @@ async function getAggregatedByTerm(cName, campaign, term) {
 }
 
 async function getLimitedCollection(cName, filter, maxAmount, reportOverflow) {
+    // note: sorting only tested for cName === search
     try {
         const mongoc = await mongo3.clientConnect({concurrency: 1});
-        const results = await mongo3.readLimit(mongoc, cName, filter, {}, maxAmount, 0);
+        const results = await mongo3.readLimit(mongoc, cName, filter, {savingTime: -1}, maxAmount, 0);
+        if(reportOverflow && _.size(results) === maxAmount) {
+            // a db access only for debug sake!
+            const full = await mongo3.count(mongoc, cName, filter);
+            debug("the maxAmount for this filter is set to %d. full available %d, sorting by most recent",
+                maxAmount, full);
+        }
         await mongoc.close();
-        if(reportOverflow && _.size(results) === maxAmount)
-            debug("data fetch by %j reach limit of data, sorting isn't configured", filter);
         return results;
     } catch(error) {
         debug("Failure in fetching %s by %j: %s: %s", cName, filter, error.message);

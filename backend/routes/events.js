@@ -43,9 +43,8 @@ function getMirror(req) {
 }
 function appendLast(req) {
     /* this is used by getMirror, to mirror what the server is getting
-     * used by developers with password,
-     ---- TODO should be personalized and logged */
-    const MAX_STORED_CONTENT = 10;
+     * used by developers with password */
+    const MAX_STORED_CONTENT = 13;
     if(!last) last = [];
     if(_.size(last) > MAX_STORED_CONTENT) 
         last = _.tail(last);
@@ -82,10 +81,8 @@ async function processEvents2(req) {
 
     const blang = headers.language.replace(/;.*/, '').replace(/,.*/, '');
     // debug("CHECK: %s <%s>", blang, headers.language );
-
     const htmls = _.map(req.body, function(body, i) {
-        // TODO replace this trash with URL() and double check 'video' | 'home' | wtv..
-        const isSearch = !!body.href.match(/\.youtube\.com\/results\?/);
+        const nature = utils.getNatureFromURL(body.href);
         const metadataId = utils.hash({
             publicKey: headers.publickey,
             randomUUID: body.randomUUID,
@@ -112,19 +109,22 @@ async function processEvents2(req) {
             incremental: body.incremental,
             type: body.type,
             packet: i,
+            nature,
         }
         return html;
     });
 
-    if(_.size(_.filter(htmls, { type: 'info'})))
-        debug("[i] Received info package (currently ignored)");
-
-    const check = await automo.write(nconf.get('schema').htmls, _.reject(htmls, { type: 'info'}));
-    if(check && check.error) {
-        debug("Error in saving %d htmls %j", _.size(htmls), check);
-        return { json: {status: "error", info: check.info }};
+    const enhanced = await automo.enhanceHTMLifExperiment(htmls);
+    let check;
+    if(enhanced.length) {
+        check = await automo.write(nconf.get('schema').htmls, enhanced);
+        if(check && check.error) {
+            debug("Error in saving %d htmls %j", _.size(htmls), check);
+            return { json: {status: "error", info: check.info }};
+        }
+        debug("Saved %d htmls metadataId: %j", enhanced.length, _.uniq(_.map(enhanced, 'metadataId')));
     }
-
+ 
     const labels = _.map(_.filter(htmls, { type: 'info'}), function(e) {
         e.acquired = e.html.acquired;
         e.selectorName = e.html.name;
@@ -132,22 +132,24 @@ async function processEvents2(req) {
         _.unset(e, 'html');
         return e;
     });
-    const labelret = await automo.write(nconf.get('schema').labels, labels);
-    if(labelret && labelret.error) {
-        debug("Error in saving %d labels %j", _.size(labels), labelret);
-        return { json: {status: "error", info: labelret.info }};
+    let labelret;
+    if(labels.length) {
+        labelret = await automo.write(nconf.get('schema').labels, labels);
+        if(labelret && labelret.error) {
+            debug("Error in saving %d labels %j", _.size(labels), labelret);
+            return { json: {status: "error", info: labelret.info }};
+        }
+        debug("Saved %d labels metadataId: %j", labels.length, _.uniq(_.map(labels, 'metadataId')));
     }
 
-    const info = _.map(_.concat(_.reject(htmls, { type: 'info' }), labels), function(e) {
-        return [ "i" + e.incremental, e.size, e.selectorName ? e.selectorName : e.selector, e.type ];
-    });
-    debug("%s %s <- %s", supporter.p, _.uniq(_.map(htmls, 'href')), JSON.stringify(info));
+    if(_.size(_.compact(_.map(htmls, 'experiment'))))
+        debug("Experiment submission (%j)", _.map(htmls, 'experiment'));
 
     /* this is what returns to the web-extension */
     return { json: {
         status: "OK",
-        supporter: supporter,
-        results: check
+        supporter,
+        labels: _.size(labels),
     }};
 };
 
@@ -164,6 +166,6 @@ const hdrs =  {
 module.exports = {
     processEvents2,
     getMirror,
-    hdrs: hdrs,
-    processHeaders: processHeaders,
+    hdrs,
+    processHeaders,
 };

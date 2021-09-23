@@ -42,19 +42,14 @@ function formatReturn(updated) {
 
 async function getLast(req) {
 
-    const fields = ['watcher', 'title', 'viewInfo', 'savingTime',
-                    'videoId', 'authorName', 'authorSource', 'likeInfo',
-                    'publicationString', 'relatedN' ];
-    const amount = 10;
-
     if(_.isNull(cache.content) || (cache.next && moment().isAfter(cache.next)) ) {
         // if not initialized ^^^^ or if the cache time is expired: do the query
         const last = await automo.getTransformedMetadata([
             { $match: { title: { $exists: true }, "related.19": { $exists: true } }},
             { $sort: { savingTime: -1 }},
-            { $limit: 400 },
+            { $limit: 1500 },
             { $group: { _id: "$videoId", amount: { $sum: 1 }}},
-            { $match: { amount: { $gte: 2 }}},
+            { $match: { amount: { $gte: 4 }}},
             { $lookup: { from: 'metadata', localField: '_id', foreignField: 'videoId', as: 'info' }},
             { $limit: 20 }
         ])
@@ -101,10 +96,11 @@ async function getLastHome() {
         _.each(e.selected, function(vinfo) {
             let selected = {
                 accessId: accessId.substr(0, 10),
+                metadataId: e.id,
                 order: vinfo.index,
                 source: vinfo.recommendedSource,
                 title: vinfo.recommendedTitle,
-                videodId: vinfo.videoId,
+                videoId: vinfo.videoId,
                 thumbnailHref: vinfo.thumbnailHref,
                 publicationTime: vinfo.publicationTime,
             }
@@ -191,7 +187,7 @@ async function getByAuthor(req) {
      * but a data format ready for the visualization provided - this has been 
      * temporarly suspended: https://github.com/tracking-exposed/youtube.tracking.exposed/issues/18 */
 
-    const { amount, skip } = params.optionParsing(req.params.paging, PUBLIC_AMOUNT_ELEMS);
+    const { amount, skip } = params.optionParsing(req.params.amount, PUBLIC_AMOUNT_ELEMS);
     debug("getByAuthor %s amount %d skip %d", req.params.query, amount, skip);
 
     let authorStruct;
@@ -213,90 +209,42 @@ async function getByAuthor(req) {
     debug("getByAuthor returns %d elements from %s",
         _.size(authorStruct.content), authorName);
 
-    const publicFields = ['id', 'title', 'savingTime', 'videoId', 'linkinfo',
-        'viewInfo', 'related', 'authorName', 'authorSource', 'publicationString' ];
+    const units = { total: 0, stripped: 0 }
+    const ready = _.flatten(_.compact(_.map(authorStruct.content, function(video, i) {
+        if(video.related && video.related[0] && video.related[0].title) {
+            units.stripped++;
+            return null;
+        }
+        // ^^^ this because old data with .title haven't the recommendedSource
+        // and client can't do anything. so we'll count the effective values
+        units.total++;
+        video.id = video.id.substr(0, 20);
 
-    const clean = _.map(authorStruct.content, function(e) {
-        // id is anonymized in this way, and is still an useful unique id
-        e.id = e['id'].substr(0, 20);
-        return _.pick(e, publicFields)
-    });
-
-    /* first step is separate the three categories and merge infos */
-    const sameAuthor = _.map(clean, function(video) {
-        return _.map(_.filter(video.related, { source: authorName }), function(r) {
+        return _.map(video.related, function(recommended, n) {
+            const cleanVideoId = recommended.videoId.replace(/\&.*/, '');
             return {
-                watchedTitle: video.title,
-                id: video.id + r.videoId,
-                savingTime: video.savingTime,
-                watchedVideoId: video.videoId,
-                relatedVideoId: r.videoId,
-                relatedTitle: r.title,
-            }
-        });
-    });
-
-    const foryou = _.map(clean, function(video) {
-        return _.map(_.filter(video.related, { foryou: true }), function(r) {
-            return {
-                watchedTitle: video.title,
-                id: video.id + r.videoId,
-                savingTime: video.savingTime,
-                watchedVideoId: video.videoId,
-                relatedVideoId: r.videoId,
-                relatedTitle: r.title,
-                relatedAuthorName: authorName,
-            }
-        });
-    });
-
-    const treasure = _.map(clean, function(video) {
-        debug("byAuthor quick check ø SA %d FY %d T %d (total %d)", 
-            _.size(_.filter(video.related, { source: authorName })),
-            _.size(_.filter(video.related, { foryou: true })),
-            _.size( _.reject( _.reject(video.related, { source: authorName }), { foryou: true })),
-            _.size(clean)
-        );
-        return _.map( _.reject( _.reject(video.related, { source: authorName }), { foryou: true }), function(r) { 
-            return {
-                id: video.id + r.videoId,
+                id: video.id + i + cleanVideoId + n,
                 watchedTitle: video.title,
                 watchedVideoId: video.videoId,
                 savingTime: video.savingTime,
-                relatedVideoId: r.videoId,
-                relatedTitle: r.title,
-                relatedAuthorName: authorName,
+                recommendedVideoId: cleanVideoId,
+                recommendedViews: recommended.recommendedViews,
+                recommendedTitle: recommended.recommendedTitle,
+                recommendedChannel: recommended.recommendedSource,
             }
         });
-    })
+    })));
 
-    /* second step to filter them by time (if needed) */
-    /* and filter the fields */
-
-    /* this step is group and count */
-    const csa = _.groupBy(_.flatten(sameAuthor), 'relatedVideoId');
-    const cfy = _.groupBy(_.flatten(foryou), 'relatedVideoId');
-    const ct = _.groupBy(_.flatten(treasure), 'relatedVideoId');
-
-    const reduced = {
-        sameAuthor: csa,
-        foryou: cfy,
-        treasure: ct,
-    };
-
-    debug("byAuthor [%s], %d evidences, returning %d bytes instead of %d", 
-        authorName,
-        _.size(authorStruct.content),
-        _.size(JSON.stringify(reduced)),
-        _.size(JSON.stringify(authorStruct.content))
-    );
+    debug("Returning byAuthor (%s) %d video considered, %d recommendations",
+        authorName, _.size(authorStruct.content), _.size(ready) );
 
     return { json: {
         authorName,
-        content: reduced,
         authorSource: authorStruct.authorSource,
         paging: authorStruct.paging,
-        total: authorStruct.total,
+        overflow: authorStruct.overflow,
+        ...units,
+        content: ready,
     }};
 };
 

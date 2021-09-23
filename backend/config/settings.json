@@ -9,7 +9,13 @@
       "queries": "queries",
       "campaigns": "campaigns",
       "searches": "searches",
-      "errors": "errors"
+      "errors": "errors",
+      "experiments": "experiments2",
+      "guardoni": "guardoni",
+      "answers": "answers",
+      "recommendations": "recommendations",
+      "ytvids": "ytvids",
+      "chiaroscuro": "chiaroscuro"
   },
   "mongoHost": "localhost",
   "mongoPort": 27017,

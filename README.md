@@ -6,7 +6,21 @@
 
 This produces the **distributed** release, in the directory `dist` you should find `extension.zip` which is thw same file uploaded to Mozilla and Chrome add-ons stores.
 
+## Anybody else (except developers)?
+
+Please refer to [youtube.tracking.exposed](https://youtube.tracking.exposed), with this tools we did a bunch of publications and analysis, you can repeat them or imagine your own!
+
 ### Developer? 
+
+Directories:
+
+* backend: please look in bin/ and you'll see microservices, batch processes and utility scripts used by the yttrex toolkit.
+* methodology: please read the README.md, the tool is meant to automate access to youtube.
+* reach-pieces: and experimental approach on how to build component of the UX with react.
+* extension: please keep reading this README, it talks about how is build [this extension](https://addons.mozilla.org/en-US/firefox/addon/yttrex/).
+
+#### Now, if you're a developer interested in the browser extension:
+
 Instead of `build:dist`, use:
 
   npm run build
@@ -15,7 +29,7 @@ The command above produce the in **development release**, the results it is *not
 
 # TL;DR
 
-This is the source code for one of the **tracking-exposed** web-extension. The broad scope of the project is described in the [Manifesto](https://tracking.exposed)
+This is the source code for one of the **tracking-exposed** web-extension and backend HTML parser, plus the API to export analyzed data. The broad scope of the project is described in the [Manifesto](https://tracking.exposed)
 
 ## Code
 
@@ -70,15 +84,12 @@ Visit [YouTube](https://www.youtube.com/) and open the dev tools. You should see
 tidy -i -m -w 0 -utf8 file.html
 ```
 
-# Thanks
-[@sohkai](https://github.com/sohkai) for the amazing [js-reactor boilerplate](https://github.com/bigchaindb/js-reactor).
-=======
-# Thanks
-[@vrde](https://github.com/vrde) for the perfect basement to hack on
 
-[@sohkai](https://github.com/sohkai) for the amazing [js-reactor
+# Thanks
+
+* [@vrde](https://github.com/vrde) for the perfect basement to hack on
+* [@sohkai](https://github.com/sohkai) for the amazing [js-reactor
 boilerplate](https://github.com/bigchaindb/js-reactor).
-
 
 # License
 

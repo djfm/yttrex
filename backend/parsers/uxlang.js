@@ -23,6 +23,7 @@ const absoluteDateIntroSentence = [
     'Trasmesso in anteprima ',
     'Transmitido ao vivo ',
     'Trasmissione in live streaming ',
+    'El estreno empezó hace ',
     'Scheduled for ',   // How should we manage future evidence?
 ];
 const conditionalExtra = [{
@@ -141,6 +142,7 @@ const relativeOpeningString = [
     'Aktiver',      // Aktiver Livestream seit 3 Stunden
     'Livestream',   // Livestream vor 6 Stunden
     'streamen',     // 37 minuten geleden begonnen met streamen
+    'El',           // El estreno empezó hace 3 minutos
 ];
 
 function findRelative(stri, clientTime) {
@@ -238,7 +240,7 @@ function findLanguage(type, chunks) {
 
 // The only external API is this!
 function sequenceForPublicationTime(D, blang, clientTime) {
-    
+
     // from the language in the buttons we infer the language
     const m = _.uniq(_.compact(_.map(D.querySelectorAll('button'), function(e) {
         let l = _.trim(e.textContent)
@@ -248,16 +250,16 @@ function sequenceForPublicationTime(D, blang, clientTime) {
     let publicationTime, publicationString = null;
     const serverSideBlang = findLanguage('video', m);
     blang = serverSideBlang ? serverSideBlang : blang;
-
+/*
     if(!serverSideBlang && !blang)
         nlpdebug("OOO wtf! lack of ssblang and csblang (%j)", m);
 
     if(serverSideBlang != blang)
         nlpdebug("!*! Difference in ssblang (winner) %s and csblang %s", serverSideBlang, blang);
+*/
+    publicationString = D.querySelector("#dot + .ytd-video-primary-info-renderer").textContent;
+    if(publicationString.length > 2) {
 
-    if(_.size(D.querySelector('#date > yt-formatted-string').textContent) > 2 ) {
-       
-        publicationString = D.querySelector('#date > yt-formatted-string').textContent;
         moment.locale(blang);
         const { fmt, cleanString } = getFormatCleanString(publicationString);
 
@@ -287,14 +289,9 @@ function sequenceForPublicationTime(D, blang, clientTime) {
         /* restore locale */
         moment.locale('en');
     } else {
-        throw new Error("lack of HTML snippet!")
+        throw new Error("Failure in spotting publication date")
     }
 
-    if(blang != serverSideBlang) {
-        nlpdebug("%s %s differs, blang and serverblang", blang, serverSideBlang);
-        // is not yet managed, should be both considered? 
-        process.quit(2)
-    }
     nlpdebug("SOURCE |%s| BECOME => |%s| (uxlang %s)", publicationString, publicationTime, blang);
 
     return { publicationTime, publicationString, ifLang: blang };
