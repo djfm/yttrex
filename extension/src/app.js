@@ -219,28 +219,33 @@ function manageNodes(command, selectorName, selected) {
         .split('')
         .reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0); return a&a},0);
 
-    let newly = null;
+    let acquired = null;
     if(cacheByLocation[hash]) {
         cacheByLocation[hash]++;
         console.log("cache increment",
             hash, cacheByLocation[hash], selectorName);
         return;
-    } else {
-        console.log("initalizing hash", hash);
-        cacheByLocation[hash] = 1;
-        newly = { html, hash };
     }
+    // most of the time this doesn't happens: duplication are many!
+    // is debug-worthy remove the 'return' and send cache counter.
+
+    console.log("initalizing hash", hash);
+    cacheByLocation[hash] = 1;
+    // as it is the first observation, take infos and send it
+    acquired = {
+        html, hash,
+        offsetTop: selected.offsetTop,
+        offsetLeft: selected.offsetLeft,
+        href: window.location.href,
+        selectorName,
+        randomUUID,
+    };
 
     // helpful only at development time:
-    // const extra = extractor.mineExtraMetadata(selectorName, selected);
+    // const extra = extractor.mineExtraMetadata(selectorName, acquired);
     // console.table(extra);
 
-    hub.event('newInfo', {
-        element: newly,
-        href: window.location.href,
-        name: selectorName,
-        randomUUID,
-    });
+    hub.event('newInfo', acquired);
     phase('adv.seen');
     return selectorName;
 };

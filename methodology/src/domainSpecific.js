@@ -1,10 +1,16 @@
 const _ = require('lodash');
 const moment = require('moment');
 const debug = require('debug')('guardoni:youtube');
-const bcons = require('debug')('guardoni:console');
+const logreqst = require('debug')('guardoni:requests');
 const bconsError = require('debug')('guardoni:error');
 const keyprint = require('debug')('guardoni:key');
 const path = require('path');
+const url = require('url');
+const fs = require('fs');
+
+debug.enabled = true;
+keyprint.enabled = true;
+logreqst.enabled = true;
 
 let sentOnce = false;
 function lookForPubkey(message) {
@@ -19,15 +25,45 @@ function lookForPubkey(message) {
     }
 };
 
-async function beforeDirectives(page) {
+let loggedextreqs = 0;
+async function beforeDirectives(page, profinfo) {
     page.on('console', lookForPubkey);
-    page
-        .on('pageerror', ({ message }) =>
-            bconsError('Error %s', message) ) /*
-        .on('response', response =>
-            bcons(`Response: ${response.status()} ${response.url()}`)) */
-        .on('requestfailed', request =>
-            bconsError(`Requestfail: ${request.failure().errorText} ${request.url()}`));
+    page.on('pageerror', message => bconsError('Error %s', message));
+    page.on('requestfailed', request => bconsError(`Requestfail: ${request.failure().errorText} ${request.url()}`));
+    // await page.setRequestInterception(true);
+    page.on('request', await _.partial(manageRequest, profinfo));
+}
+
+async function manageRequest(profinfo, reqpptr) {
+    try {
+        const up = url.parse(reqpptr.url());
+        const full3rdparty = {
+            method: reqpptr.method(),
+            host: up.host,
+            pathname: up.pathname,
+            search: up.search,
+            type: reqpptr.resourceType(),
+            when: new Date()
+        };
+        if(full3rdparty.method != 'GET')
+            full3rdparty.postData = reqpptr.postData();
+
+        const reqlogfilename = path.join(
+            'profiles',
+            profinfo.profileName,
+            'requestlog.json'
+        );
+        fs.appendFileSync(
+            reqlogfilename,
+            JSON.stringify(full3rdparty) + "\n"
+        );
+        loggedextreqs[up.host] =  loggedextreqs[up.host] ? 
+            loggedextreqs[up.host]++ : 1;
+        if(up.host !== 'www.youtube.com')
+            logreqst("Logged external request to %s", full3rdparty.host)
+    } catch(error) {
+        debug("Error in manageRequest function: %s", error.message);
+    }
 }
 
 async function beforeWait(page, directive) {
@@ -151,4 +187,5 @@ module.exports= {
     beforeDirectives,
     interactWithYT,
     getYTstatus,
+    loggedextreqs,
 }
