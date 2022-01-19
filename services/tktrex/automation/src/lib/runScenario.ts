@@ -33,8 +33,13 @@ interface Context {
  */
 export const handleCaptcha = async(
   config: CommandConfig,
+  platform: 'tiktok' | 'youtube',
   page: puppeteer.Page,
 ): Promise<void> => {
+  if (platform !== 'tiktok') {
+    throw new Error('captcha handling is only implemented for TikTok');
+  }
+
   try {
     await page.waitForSelector('#captcha-verify-image', {
       visible: true,
@@ -64,8 +69,13 @@ export const handleCaptcha = async(
 
 export const acceptCookies = async(
   config: CommandConfig,
+  platform: 'tiktok' | 'youtube',
   page: puppeteer.Page,
 ): Promise<void> => {
+  if (platform !== 'tiktok') {
+    throw new Error('cookies banner accepting is only implemented for TikTok');
+  }
+
   const banner = await page.$('[class*="CookieBannerContainer"]');
 
   if (!banner) {
@@ -96,8 +106,8 @@ export const runStep = async(
   if (step.type === 'search') {
     await page.goto(step.platformURL);
 
-    await handleCaptcha(config, page);
-    await acceptCookies(config, page);
+    await handleCaptcha(config, step.platform, page);
+    await acceptCookies(config, step.platform, page);
 
     return context;
   }
