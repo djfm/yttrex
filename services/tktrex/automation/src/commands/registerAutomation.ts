@@ -13,6 +13,15 @@ import { GetAPI } from '@shared/providers/api.provider';
 
 import { dryRunAutomation } from '../lib/runScenario';
 
+interface CLIOptions {
+  type: string,
+  file: string,
+  description?: string,
+  label?: string,
+  ttUsername?: string,
+  ttPassword?: string,
+}
+
 export const recordToStep = (record: Record<string, string>): SearchStep => {
   if (Object.keys(record).length !== 1) {
     throw new Error('invalid record, expected 1 column only');
@@ -35,12 +44,9 @@ export const createScenarioFromFile = async({
   file,
   description,
   label,
-}: {
-  type: string;
-  file: string;
-  description?: string;
-  label?: string;
-}): Promise<AutomationScenario> => {
+  ttUsername,
+  ttPassword,
+}: CLIOptions): Promise<AutomationScenario> => {
   if (type !== 'tiktok-fr-elections') {
     throw new Error(`unsupported automation type: ${type}`);
   }
@@ -64,6 +70,12 @@ export const createScenarioFromFile = async({
     label,
     script: steps,
     createdAt: new Date().toISOString() as any,
+    credentials: {
+      tiktok: (ttUsername && ttPassword) ? {
+        username: ttUsername,
+        password: ttPassword,
+      } : undefined,
+    },
   };
 
   return scenario;
@@ -76,12 +88,7 @@ export const registerAutomation =
       file,
       description,
       label,
-    }: {
-    type: string;
-    file: string;
-    description?: string;
-    label?: string;
-  }): Promise<void> => {
+    }: CLIOptions): Promise<void> => {
       config.log.info('registering automation for "%s"...', type);
 
       const scenario = await createScenarioFromFile({
@@ -139,6 +146,16 @@ const addArguments = (y: yargs.Argv) =>
       type: 'string',
       demandOption: true,
       choices: ['tiktok-fr-elections'],
+    })
+    .option('tt-username', {
+      alias: 'ttu',
+      desc: 'TikTok username',
+      type: 'string',
+    })
+    .option('tt-password', {
+      alias: 'ttp',
+      desc: 'TikTok password',
+      type: 'string',
     });
 
 export const registerAutomationCommand: CommandCreator = {

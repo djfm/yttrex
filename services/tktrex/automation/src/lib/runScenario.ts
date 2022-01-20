@@ -5,6 +5,11 @@ import puppeteer from 'puppeteer';
 import { AutomationScenario, AutomationStep } from '@shared/models/Automation';
 
 import { CommandConfig } from '../models/CommandCreator';
+import {
+  handleCaptcha,
+  acceptCookies,
+  ttLogin,
+} from './platformUtil';
 
 export const prompt = (question: string): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -20,85 +25,15 @@ export const prompt = (question: string): Promise<string> => {
   });
 };
 
-export const sleep = async(ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
-
 interface Context {
-  loggedIn: boolean;
+  ttLoggedIn: boolean;
 }
-
-/**
- * Checks if a captcha is present on the page, if so,
- * wait until it is not present anymore (and ask user to solve it).
- */
-export const handleCaptcha = async(
-  config: CommandConfig,
-  platform: 'tiktok' | 'youtube',
-  page: puppeteer.Page,
-): Promise<void> => {
-  if (platform !== 'tiktok') {
-    throw new Error('captcha handling is only implemented for TikTok');
-  }
-
-  try {
-    await page.waitForSelector('#captcha-verify-image', {
-      visible: true,
-      timeout: 5000,
-    });
-
-    config.log.info('captcha detected, please solve it');
-
-    for (;;) {
-      try {
-        await page.waitForSelector('#captcha-verify-image', {
-          visible: true,
-          timeout: 5000,
-        });
-
-        config.log.info('waiting for captcha to disappear...');
-        await sleep(5000);
-      } catch (err) {
-        config.log.info('thanks for solving the captcha');
-        break;
-      }
-    }
-  } catch (err) {
-    // ignore
-  }
-};
-
-export const acceptCookies = async(
-  config: CommandConfig,
-  platform: 'tiktok' | 'youtube',
-  page: puppeteer.Page,
-): Promise<void> => {
-  if (platform !== 'tiktok') {
-    throw new Error('cookies banner accepting is only implemented for TikTok');
-  }
-
-  const banner = await page.$('[class*="CookieBannerContainer"]');
-
-  if (!banner) {
-    return;
-  }
-
-  const button = await banner.$('button:last-of-type');
-
-  if (!button) {
-    throw new Error('failed to accept cookies');
-  }
-
-  await button.click();
-
-  config.log.info('accepted cookies');
-
-  await sleep(5000);
-};
 
 export const runStep = async(
   config: CommandConfig,
   context: Context,
   page: puppeteer.Page,
+  scenario: AutomationScenario,
   step: AutomationStep,
 ): Promise<Context> => {
   config.log.debug('running step: %O', step);
@@ -108,6 +43,18 @@ export const runStep = async(
 
     await handleCaptcha(config, step.platform, page);
     await acceptCookies(config, step.platform, page);
+
+    if (step.platform === 'tiktok' && !context.ttLoggedIn) {
+      if (!scenario.credentials.tiktok) {
+        throw new Error('no TikTok credentials provided');
+      }
+
+      await ttLogin(
+        config,
+        scenario.credentials.tiktok,
+        page,
+      );
+    }
 
     return context;
   }
@@ -131,12 +78,18 @@ export const dryRunAutomation =
       const scriptReducer = async(
         ctx: Promise<Context>,
         step: AutomationStep,
-      ): Promise<Context> => runStep(config, await ctx, page, step);
+      ): Promise<Context> => runStep(
+        config,
+        await ctx,
+        page,
+        scenario,
+        step,
+      );
 
       await scenario.script.reduce(
         scriptReducer,
         Promise.resolve({
-          loggedIn: false,
+          ttLoggedIn: false,
         }),
       );
 

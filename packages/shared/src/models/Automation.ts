@@ -41,6 +41,12 @@ export type AutomationStep = t.TypeOf<typeof AutomationStep>;
 export const AutomationScript = t.array(AutomationStep, 'AutomationScript');
 export type AutomationScript = t.TypeOf<typeof AutomationScript>;
 
+export const Credentials = t.type({
+  username: t.string,
+  password: t.string,
+}, 'Credentials');
+export type Credentials = t.TypeOf<typeof Credentials>;
+
 export const AutomationScenario = t.type(
   {
     type: t.string,
@@ -48,6 +54,9 @@ export const AutomationScenario = t.type(
     label: t.union([t.string, t.undefined]),
     script: AutomationScript,
     createdAt: DateFromISOString,
+    credentials: t.type({
+      tiktok: t.union([Credentials, t.undefined]),
+    }, 'ScenarioCredentials'),
   },
   'AutomationScenario'
 );
