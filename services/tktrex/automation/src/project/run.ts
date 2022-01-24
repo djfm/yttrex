@@ -1,28 +1,20 @@
-/* eslint-disable no-console */
-
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
 import yaml from 'yaml';
 
 import { fileExists } from '../util/general';
+import { createLogger } from '../util/logger';
 import { run as tikTokRun } from '../platform/TikTok/project';
 import { experimentTypes } from './init';
-
-const exit = (message: string, code = 0): never => {
-  if (code === 0) {
-    console.log(`Finished with success: ${message}.`);
-  } else {
-    console.error(`Finished with error: ${message}.`);
-  }
-  process.exit(code);
-};
 
 export interface RunOptions {
   directory: string;
 }
 
 export const run = async({ directory }: RunOptions): Promise<void> => {
+  const logger = createLogger();
+
   const configPath = join(directory, 'config.yaml');
 
   if (!(await fileExists(configPath))) {
@@ -37,17 +29,20 @@ export const run = async({ directory }: RunOptions): Promise<void> => {
     throw new Error(`unknown experiment type: "${rawConfig.experimentType}"`);
   }
 
-  console.log(
+  logger.log(
     `Running "${rawConfig.experimentType}" experiment in "${directory}"...`,
   );
 
   if (rawConfig.experimentType.startsWith('tt-')) {
-    await tikTokRun({
+    const page = await tikTokRun({
       directory,
       rawConfig,
     });
 
-    exit('done running experiment');
+    await page.browser().close();
+
+    logger.log('Done running experiment!');
+    process.exit(0);
   }
 
   throw new Error(`unknown experiment type: "${rawConfig.experimentType}"`);
