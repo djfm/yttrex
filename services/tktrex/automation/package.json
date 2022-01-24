@@ -5,8 +5,7 @@
   "scripts": {
     "build": "NODE_ENV=production webpack",
     "clean": "rm -Rf dist",
-    "automate": "ts-node ./src/index.ts",
-    "djfm-fr-elections": "yarn automate search-on-tiktok ~/work/French\\ Elections/tt-auto.csv --url https://tiktok.com/fr --profile ~/work/profiles/djfm-tt-fr-elections"
+    "automate": "ts-node ./src/index.ts"
   },
   "main": "./dist/index.js",
   "devDependencies": {
