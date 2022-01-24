@@ -5,10 +5,8 @@
   "scripts": {
     "build": "NODE_ENV=production webpack",
     "clean": "rm -Rf dist",
-    "automate:dev": "NODE_ENV=development ts-node ./src/index.ts",
-    "automate:prod": "NODE_ENV=production ts-node ./src/index.ts",
-    "automate": "node ./dist/index.js",
-    "tmp": "yarn automate:dev search-on-tiktok ~/work/French\\ Elections/tt-auto.csv --url https://tiktok.com/fr --profile /home/djfm/work/profiles/djfm-tt-fr-elections --extension-source ../extension/dist/tktrex-extension-0.2.6.zip"
+    "automate": "ts-node ./src/index.ts",
+    "tmp": "yarn automate search-on-tiktok ~/work/French\\ Elections/tt-auto.csv --url https://tiktok.com/fr --profile /home/djfm/work/profiles/djfm-tt-fr-elections --extension-source ../extension/dist/tktrex-extension-0.2.6.zip"
   },
   "main": "./dist/index.js",
   "devDependencies": {
