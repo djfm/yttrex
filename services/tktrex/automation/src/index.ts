@@ -20,7 +20,7 @@ const searchOnTikTokCommand = async({
   file: string;
   url: string;
   profile: string;
-  extensionSource: string;
+  extensionSource?: string;
   proxy?: string;
 }): Promise<void> => {
   void pipe(
@@ -73,7 +73,6 @@ const menu = yargs(hideBin(process.argv))
         .option('extension-source', {
           alias: 'e',
           desc: 'Where to get the extension from (e.g. https://tiktok.tracking.exposed/ext.zip or ~/work/tk.zip)',
-          default: 'user-installed',
           type: 'string',
         })
         .option('proxy', {
