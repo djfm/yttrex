@@ -4,7 +4,7 @@
   "description": "Guardoni is a tool to automate access and coordinate personalization algorithm analysis",
   "scripts": {
     "clean": "rm -rf build dist",
-    "pkg": "pkg ./package.json && sh ./scripts/post-compile.sh",
+    "pkg": "pkg ./package.json && sh ./bin/post-compile.sh",
     "lint": "eslint ./src/**",
     "format": "prettier -w ./src",
     "test": "jest",
@@ -13,9 +13,8 @@
     "dev": "DEBUG=\"guardoni*\" NODE_ENV=development electron ./reload.js",
     "start": "electron .",
     "pack": "electron-builder build --dir",
-    "dist:linux": "electron-builder build -l",
-    "dist:windows": "electron-builder build -w",
-    "dist:all": "scripts/electron-builder.sh",
+    "dist:win": "electron-builder build -w",
+    "dist": "electron-builder build -l",
     "postinstall": "electron-builder install-app-deps",
     "prepack": "yarn build"
   },
