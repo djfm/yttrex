@@ -6,7 +6,7 @@
     "build": "NODE_ENV=production webpack",
     "clean": "rm -Rf dist",
     "automate": "ts-node ./src/index.ts",
-    "tmp": "yarn automate search-on-tiktok ~/work/French\\ Elections/tt-auto.csv --url https://tiktok.com/fr --profile /home/djfm/work/profiles/djfm-tt-fr-elections --extension-source ../extension/dist/tktrex-extension-0.2.6.zip"
+    "djfm-fr-elections": "yarn automate search-on-tiktok ~/work/French\\ Elections/tt-auto.csv --url https://tiktok.com/fr --profile ~/work/profiles/djfm-tt-fr-elections"
   },
   "main": "./dist/index.js",
   "devDependencies": {
