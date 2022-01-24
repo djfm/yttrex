@@ -2,7 +2,7 @@ import puppeteerVanilla, { Page, Dialog } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import stealth from 'puppeteer-extra-plugin-stealth';
 
-import { prompt, sleep } from './util';
+import { prompt, sleep } from './general';
 
 puppeteer.use(stealth());
 
