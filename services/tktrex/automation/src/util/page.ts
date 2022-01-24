@@ -6,24 +6,26 @@ import { ask, sleep } from './general';
 
 puppeteer.use(stealth());
 
+export interface CreatePageOptions {
+  chromePath: string;
+  profileDirectory: string;
+  extensionDirectory: string;
+  useStealth: boolean;
+  proxy: string | null;
+}
+
 export const createPage = async({
   chromePath,
-  unpackedExtensionDirectory,
-  profile,
+  extensionDirectory,
+  profileDirectory,
   proxy,
   useStealth,
-}: {
-  chromePath: string;
-  unpackedExtensionDirectory: string;
-  profile: string;
-  proxy?: string | null;
-  useStealth: boolean;
-}): Promise<Page> => {
+}: CreatePageOptions): Promise<Page> => {
   const args = [
     '--no-sandbox',
     '--disabled-setuid-sandbox',
-    `--load-extension=${unpackedExtensionDirectory}`,
-    `--disable-extensions-except=${unpackedExtensionDirectory}`,
+    `--load-extension=${extensionDirectory}`,
+    `--disable-extensions-except=${extensionDirectory}`,
   ];
 
   if (proxy) {
@@ -39,7 +41,7 @@ export const createPage = async({
     executablePath: chromePath,
     headless: false,
     ignoreDefaultArgs: ['--disable-extensions'],
-    userDataDir: profile,
+    userDataDir: profileDirectory,
   };
 
   const p = useStealth ? puppeteer : puppeteerVanilla;
