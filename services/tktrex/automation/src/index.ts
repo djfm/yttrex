@@ -5,9 +5,9 @@ import { hideBin } from 'yargs/helpers';
 
 import init, {
   experimentTypes,
-} from './initProject';
+} from './project/init';
 
-import run from './runProject';
+import run from './project/run';
 
 const menu = yargs(hideBin(process.argv))
   .scriptName('tktrex-automation')

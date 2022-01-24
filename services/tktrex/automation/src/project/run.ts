@@ -5,9 +5,9 @@ import { join } from 'path';
 
 import yaml from 'yaml';
 
-import { fileExists } from './util';
-import { run as tikTokRun } from './tikTokProject';
-import { experimentTypes } from './initProject';
+import { fileExists } from '../util/general';
+import { run as tikTokRun } from '../platform/TikTok/project';
+import { experimentTypes } from './init';
 
 const exit = (message: string, code = 0): never => {
   if (code === 0) {
