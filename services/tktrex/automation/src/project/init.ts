@@ -7,9 +7,9 @@ import {
 import {
   isEmptyDirectoryOrDoesNotExist,
   shellEscape,
-} from './util';
+} from '../util/general';
 
-import initTikTokProject from './tikTokProject';
+import initTikTokProject from '../platform/TikTok/project';
 
 export const experimentTypes = ['tt-french-elections'] as const;
 
