@@ -10,6 +10,10 @@ import { getChromePath } from '@guardoni/guardoni/utils';
 
 import searchOnTikTok from './searchOnTikTok';
 
+import init, {
+  experimentTypes,
+} from './initProject';
+
 const searchOnTikTokCommand = async({
   file,
   url,
@@ -81,6 +85,25 @@ const menu = yargs(hideBin(process.argv))
           type: 'string',
         }),
     (args) => searchOnTikTokCommand(args),
+  )
+  .command(
+    'init [directory]',
+    'Initialize an experiment directory',
+    (y) => y
+      .positional('directory', {
+        default: '.',
+        desc: 'Directory to initialize, current directory if empty',
+        type: 'string',
+      })
+      .option('experiment-type', {
+        alias: 't',
+        demandOption: true,
+        desc: 'Type of experiment to initialize (e.g. "search-on-tiktok")',
+        type: 'string',
+        default: 'search-on-tiktok',
+        choices: experimentTypes,
+      }),
+    (args) => init(args),
   );
 
 void menu.strictCommands().demandCommand(1, 'Please provide a command').parse();

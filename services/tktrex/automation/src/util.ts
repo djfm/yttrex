@@ -57,6 +57,28 @@ export const fileExists = async(path: string): Promise<boolean> => {
   }
 };
 
+export const isEmptyDirectoryOrDoesNotExist = async(path: string): Promise<
+  true | 'not-a-directory' | 'directory-not-empty'
+> => {
+  try {
+    const stats = await stat(path);
+
+    if (!stats.isDirectory()) {
+      return 'not-a-directory';
+    };
+
+    const entries = await fs.promises.readdir(path);
+
+    if (entries.length > 0) {
+      return 'directory-not-empty';
+    }
+
+    return true;
+  } catch (e) {
+    return true;
+  }
+};
+
 const createExtensionDirectoryFromFile = async(
   file: string,
 ): Promise<string> => {
