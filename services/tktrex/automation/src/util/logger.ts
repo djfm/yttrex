@@ -11,37 +11,59 @@ const toStringGroups = (x: unknown[]): string[][] =>
   );
 
 export const createLogger = (): Logger => {
-  let groupJustClosed = false;
+  const maxVSPace = 2;
 
-  const openGroup = (): void => {
-    console.log();
+  let lineBreaksToPrepend = 0;
+  let lineBreaksPrepended = 0;
+
+  const requestLineBreak = (): void => {
+    lineBreaksToPrepend = Math.min(maxVSPace, lineBreaksToPrepend + 1);
   };
 
-  const closeGroup = (): void => {
-    groupJustClosed = true;
+  const prependLineBreak = (): void => {
+    if (lineBreaksPrepended < lineBreaksToPrepend) {
+      console.log();
+      lineBreaksPrepended += 1;
+
+      if (lineBreaksPrepended === lineBreaksToPrepend) {
+        lineBreaksToPrepend = 0;
+        lineBreaksPrepended = 0;
+      }
+    }
   };
 
   const print = (line: string): void => {
-    if (groupJustClosed) {
-      groupJustClosed = false;
-      console.log();
+    if (!line) {
+      prependLineBreak();
+    } else {
+      for (let i = lineBreaksPrepended; i < lineBreaksToPrepend; i += 1) {
+        prependLineBreak();
+      }
+      console.log(line);
     }
-    console.log(line);
   };
 
   const log = (...lines: unknown[]): void => {
     const groups = toStringGroups(lines);
 
+    if (lines.length > 1) {
+      requestLineBreak();
+    }
+
     for (const group of groups) {
       if (group.length > 1) {
-        openGroup();
+        requestLineBreak();
       }
       for (const line of group) {
         print(line);
       }
       if (group.length > 1) {
-        closeGroup();
+        requestLineBreak();
       }
+    }
+
+    if (lines.length > 1) {
+      requestLineBreak();
     }
   };
 

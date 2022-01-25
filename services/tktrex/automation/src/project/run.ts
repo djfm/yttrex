@@ -5,10 +5,7 @@ import yaml from 'yaml';
 
 import { getChromePath } from '@guardoni/guardoni/utils';
 
-import {
-  generateDirectoryStructure,
-  MinimalProjectConfig,
-} from '.';
+import { generateDirectoryStructure, MinimalProjectConfig } from '.';
 
 import { decodeOrThrow, rightOrThrow } from '@util/fp';
 import { fileExists } from '@util/general';
@@ -39,17 +36,16 @@ export const run = async({ projectDirectory }: RunOptions): Promise<void> => {
     throw new Error(`unknown experiment type: "${rawConfig.experimentType}"`);
   }
 
-  const project = decodeOrThrow(
-    MinimalProjectConfig,
-  )(rawConfig);
+  const project = decodeOrThrow(MinimalProjectConfig)(rawConfig);
 
   logger.log(
     `Running "${rawConfig.experimentType}" experiment in "${projectDirectory}"...`,
   );
 
-  const {
-    profileDirectory, extensionDirectory,
-  } = generateDirectoryStructure(projectDirectory);
+  logger.log('Full project raw configuration:', project);
+
+  const { profileDirectory, extensionDirectory } =
+    generateDirectoryStructure(projectDirectory);
 
   const chromePath = rightOrThrow(getChromePath());
 
@@ -64,6 +60,7 @@ export const run = async({ projectDirectory }: RunOptions): Promise<void> => {
         extensionDirectory,
         proxy: project.proxy,
         useStealth: project.useStealth,
+        logger,
       });
 
       await experiment.run({
@@ -74,6 +71,8 @@ export const run = async({ projectDirectory }: RunOptions): Promise<void> => {
       });
 
       await page.browser().close();
+
+      logger.log('', '...done running experiment, with success!', '');
     }
   }
 

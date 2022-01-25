@@ -2,8 +2,8 @@ import { Page } from 'puppeteer';
 
 import { askConfirmation } from '../../../util/page';
 
-import { sleep } from '../../../util/general';
-import { Logger } from '../../../util/logger';
+import { sleep } from '@util/general';
+import { Logger } from '@util/logger';
 
 export const isLoggedIn = async(
   page: Page,
@@ -97,17 +97,16 @@ export const basicCaptchaHandler = async(
   }
 };
 
-export const createHandleCaptcha = (page: Page, logger: Logger) =>
-  () =>
-    basicCaptchaHandler(
-      page,
-      () => {
-        logger.log('Captcha detected, please solve it!');
-      },
-      () => {
-        logger.log('Captcha solved, thank you!!');
-      },
-      () => {
-        logger.log('Captcha unsolved, please solve it!');
-      },
-    );
+export const createHandleCaptcha = (page: Page, logger: Logger) => () =>
+  basicCaptchaHandler(
+    page,
+    () => {
+      logger.log('', 'Captcha detected, please solve it!', '');
+    },
+    () => {
+      logger.log('', 'Captcha solved, thank you!!', '');
+    },
+    () => {
+      logger.log('', 'Captcha unsolved, please solve it!', '');
+    },
+  );
