@@ -12,6 +12,11 @@ interface InitOptions {
   experimentType: string;
 }
 
+/**
+ * Create the basic project directory structure.
+ *
+ * Will copy the experiment's assets to the project directory.
+ */
 export const init = async({
   projectDirectory,
   experimentType,
