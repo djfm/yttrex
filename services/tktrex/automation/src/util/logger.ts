@@ -5,9 +5,22 @@ export interface Logger {
   log(...lines: unknown[]): void;
 }
 
+const trim =
+  (n: number) =>
+    (x: string): string =>
+      x.length > n ? `${x.slice(0, n - 6)} [...]` : x;
+const quote = (str: string): string => `>  ${str}`;
+
+const ifMany =
+  <T>(x: T[]) =>
+    (...mappers: Array<(x: T) => T>): T[] =>
+      x.length < 2 ? x : x.map((y) => mappers.reduce((z, f) => f(z), y));
+
 const toStringGroups = (x: unknown[]): string[][] =>
   x.map((y) =>
-    typeof y === 'string' ? [y] : JSON.stringify(y, null, 2).split('\n'),
+    typeof y === 'string'
+      ? [y]
+      : ifMany(JSON.stringify(y, null, 2).split('\n'))(trim(80), quote),
   );
 
 export const createLogger = (): Logger => {
@@ -18,6 +31,23 @@ export const createLogger = (): Logger => {
   let lastMessage: string | undefined;
   let paddingTopAdded = 0;
   let indent = 0;
+
+  const indentChar = (n = indent): string => {
+    if (n < 1) {
+      return '';
+    }
+    if (n < 2) {
+      return ' # ';
+    }
+    if (n < 3) {
+      return ' | ';
+    }
+    if (n < 4) {
+      return ' . ';
+    }
+
+    return '';
+  };
 
   const requestPaddingTop = (): void => {
     paddingTopRequested = Math.min(maxVSPace, paddingTopRequested + 1);
@@ -70,7 +100,9 @@ export const createLogger = (): Logger => {
       lastMessage = line;
 
       const indentation = Array.from({ length: indent })
-        .map(() => '  ').join('');
+        .map(() => '  ')
+        .concat(indentChar())
+        .join('');
 
       console.log(`${indentation}${line}`);
     }
