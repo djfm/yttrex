@@ -3,6 +3,7 @@ import puppeteer from 'puppeteer-extra';
 import stealth from 'puppeteer-extra-plugin-stealth';
 
 import { ask, sleep } from './general';
+import { Logger } from './logger';
 
 puppeteer.use(stealth());
 
@@ -12,6 +13,7 @@ export interface CreatePageOptions {
   extensionDirectory: string;
   useStealth: boolean;
   proxy: string | null;
+  logger: Logger;
 }
 
 export const createPage = async({
@@ -20,6 +22,7 @@ export const createPage = async({
   profileDirectory,
   proxy,
   useStealth,
+  logger,
 }: CreatePageOptions): Promise<Page> => {
   const args = [
     '--no-sandbox',
@@ -44,6 +47,16 @@ export const createPage = async({
     userDataDir: profileDirectory,
   };
 
+  logger.log(
+    '',
+    'Starting puppeteer with options:',
+    options,
+    '',
+    useStealth ? 'Using stealth mode.' : 'Not using stealth mode.',
+    '',
+  );
+
+  logger.log('strong:', 'using stealth mode?', useStealth);
   const p = useStealth ? puppeteer : puppeteerVanilla;
 
   const browser = await p.launch(options);
