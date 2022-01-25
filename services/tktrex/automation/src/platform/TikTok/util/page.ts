@@ -35,7 +35,7 @@ export const isLoggedIn = async(
     // hence we're logged in if and only if we're on the
     // TikTok website, which is the case if for instance
     // the TikTok logo is visible
-    return page.$('[data-e2e="tiktok-logo"') !== null;
+    return page.$('[data-e2e="tiktok-logo"]') !== null;
   }
 };
 
