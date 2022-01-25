@@ -20,6 +20,7 @@
       "@guardoni/*": ["../../../../guardoni/src/*"],
       "@experiment/*": ["./experiment/*"],
       "@project/*": ["./project/*"],
+      "@scraper/*": ["./scraper/*"],
       "@util/*": ["./util/*"],
       "@TikTok/*": ["./platform/TikTok/*"]
     }

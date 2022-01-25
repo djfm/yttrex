@@ -11,6 +11,7 @@ export interface InitOptions {
 export type RunOptions = InitOptions & {
   page: Page;
   project: MinimalProjectConfig;
+  saveSnapshot: (metaData?: unknown) => Promise<void>;
 };
 
 export interface ExperimentDescriptor {
