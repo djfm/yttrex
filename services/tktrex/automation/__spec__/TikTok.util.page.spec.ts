@@ -1,5 +1,5 @@
 import { getAssetPath } from '@TikTok/util/project';
-import { fileExists } from '@util/general';
+import { fileExists } from '@util/fs';
 
 describe('the "getAssetPath" method for TikTok', () => {
   it('should find an asset', async(): Promise<void> => {
