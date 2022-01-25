@@ -4,7 +4,8 @@ import * as t from 'io-ts';
 
 import { ExperimentDescriptor } from '@experiment/index';
 import { decodeOrThrow } from '@util/fp';
-import { copyFromTo, sleep } from '@util/general';
+import { copyFromTo } from '@util/fs';
+import { sleep } from '@util/random';
 import { createHandleCaptcha, ensureLoggedIn } from '@TikTok/util/page';
 import { loadQueriesCSV } from '@util/csv';
 import { askConfirmation, fillInput } from '@util/page';
@@ -12,12 +13,18 @@ import { loadProfileState } from '@project/state';
 import { getAssetPath, init as tikTokInit } from '@TikTok/util/project';
 import { MinimalProjectConfig } from '@project/index';
 
-const Config = t.intersection([
-  MinimalProjectConfig,
-  t.type({
-    baseURL: t.string,
-  }, 'baseURL'),
-], 'Config');
+const Config = t.intersection(
+  [
+    MinimalProjectConfig,
+    t.type(
+      {
+        baseURL: t.string,
+      },
+      'baseURL',
+    ),
+  ],
+  'Config',
+);
 type Config = t.TypeOf<typeof Config>;
 
 export const FrenchElections: ExperimentDescriptor = {
@@ -32,10 +39,7 @@ export const FrenchElections: ExperimentDescriptor = {
       'search.README.md': 'README.md',
     });
   },
-  run: async({
-    page, logger, projectDirectory,
-    project: minimalConfig,
-  }) => {
+  run: async({ page, logger, projectDirectory, project: minimalConfig }) => {
     const project = decodeOrThrow(Config)(minimalConfig);
 
     // TODO: how can this be made type safe?

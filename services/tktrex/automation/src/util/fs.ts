@@ -1,34 +1,6 @@
 import fs from 'fs';
-
 import { cp, stat } from 'fs/promises';
 import { join } from 'path';
-import readline from 'readline';
-
-export const ask = async(message: string, a?: AbortSignal): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    if (a) {
-      const onAbort = (): void => {
-        a.removeEventListener('abort', onAbort);
-        rl.close();
-        reject(new Error('aborted'));
-      };
-
-      a.addEventListener('abort', onAbort);
-    }
-
-    rl.question(message, (answer) => {
-      rl.close();
-      return resolve(answer);
-    });
-  });
-
-export const sleep = async(ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Create a function that returns a function accepting a map of
@@ -58,12 +30,6 @@ export const copyFromTo =
         ),
       );
     };
-
-/**
- * Escape a string for use in a shell command.
- */
-export const shellEscape = (cmd: string): string =>
-  cmd.replace(/(["'$`\\]|\s+)/g, '\\$1');
 
 export const fileExists = async(path: string): Promise<boolean> => {
   try {

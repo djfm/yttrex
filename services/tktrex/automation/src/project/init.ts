@@ -1,6 +1,7 @@
 import { mkdir } from 'fs/promises';
 
-import { isEmptyDirectoryOrDoesNotExist, shellEscape } from '@util/general';
+import { isEmptyDirectoryOrDoesNotExist } from '@util/fs';
+import { shellEscape } from '@util/random';
 import { createLogger } from '@util/logger';
 import experimentDescriptors from '@experiment/descriptors';
 
