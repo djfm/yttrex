@@ -9,6 +9,7 @@ import { createHandleCaptcha, ensureLoggedIn } from '@TikTok/util/page';
 import { loadQueriesCSV } from '@util/csv';
 import { fillInput } from '@util/page';
 import { loadProfileState } from '@project/state';
+import { SnapshotStore } from '@TikTok/scraper/index';
 
 import {
   init,
@@ -44,6 +45,7 @@ export const FrenchElections: ExperimentDescriptor = {
   },
   run: async({ page, logger, projectDirectory, project: minimalConfig }) => {
     const project = decodeOrThrow(Config)(minimalConfig);
+    const snapshotStore = new SnapshotStore(projectDirectory);
 
     // TODO: how can this be made type safe?
     const queries = await loadQueriesCSV(join(projectDirectory, 'queries.csv'));
@@ -63,10 +65,19 @@ export const FrenchElections: ExperimentDescriptor = {
     for (const query of queries) {
       logger.log(`Searching for "${query}"...`);
 
-      await fillInput(page, '[data-e2e="search-user-input"', query);
+      await fillInput(page, '[data-e2e="search-user-input"]', query);
       await page.keyboard.press('Enter');
       await handleCaptcha();
       await sleep(5000);
+
+      await snapshotStore.add({
+        url: page.url(),
+        html: await page.content(),
+        scrapedOn: new Date(),
+        metaData: {
+          query,
+        },
+      });
     }
 
     return page;
