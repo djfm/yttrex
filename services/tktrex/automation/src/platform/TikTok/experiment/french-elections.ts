@@ -63,7 +63,7 @@ export const FrenchElections: ExperimentDescriptor = {
     for (const query of queries) {
       logger.log(`Searching for "${query}"...`);
 
-      await fillInput(page, '[data-e2e="search-user-input"', query);
+      await fillInput(page, '[data-e2e="search-user-input"]', query);
       await page.keyboard.press('Enter');
       await handleCaptcha();
       await sleep(5000);
