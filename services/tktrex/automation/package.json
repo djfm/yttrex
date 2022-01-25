@@ -6,7 +6,7 @@
     "build": "NODE_ENV=production webpack",
     "clean": "rm -Rf dist",
     "automate": "ts-node ./src/index.ts",
-    "tmp": "yarn automate run ~/tmp/p1"
+    "tmp": "yarn automate run /home/djfm/tmp/p1"
   },
   "main": "./dist/index.js",
   "devDependencies": {
