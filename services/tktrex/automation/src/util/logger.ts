@@ -26,10 +26,8 @@ const toStringGroups = (x: unknown[]): string[][] =>
 export const createLogger = (): Logger => {
   const maxVSPace = 2;
 
-  let paddingTopRequested = 0;
-  let paddingBottomRequested = 0;
+  let paddingRequested = 0;
   let lastMessage: string | undefined;
-  let paddingTopAdded = 0;
   let indent = 0;
 
   const indentChar = (n = indent): string => {
@@ -49,49 +47,38 @@ export const createLogger = (): Logger => {
     return '';
   };
 
-  const requestPaddingTop = (): void => {
-    paddingTopRequested = Math.min(maxVSPace, paddingTopRequested + 1);
-  };
-
-  const requestPaddingBottom = (): void => {
-    paddingBottomRequested = Math.min(maxVSPace, paddingBottomRequested + 1);
+  const requestPadding = (): void => {
+    paddingRequested = Math.min(maxVSPace, paddingRequested + 1);
   };
 
   const startGroup = (): void => {
-    requestPaddingTop();
+    requestPadding();
     indent += 1;
   };
 
   const endGroup = (): void => {
-    requestPaddingBottom();
+    requestPadding();
     indent -= 1;
   };
 
   const padOne = (): void => {
-    if (paddingTopRequested > 0) {
+    if (paddingRequested > 0) {
       console.log('');
-      paddingTopRequested -= 1;
-      paddingTopAdded += 1;
-
-      if (paddingTopRequested === 0) {
-        paddingTopRequested = paddingBottomRequested;
-        paddingBottomRequested = 0;
-      }
+      paddingRequested -= 1;
     }
   };
 
   const padAll = (): void => {
     // This lint is wrong here.
     // eslint-disable-next-line no-unmodified-loop-condition
-    while (paddingTopRequested - paddingTopAdded > 0) {
+    while (paddingRequested > 0) {
       padOne();
     }
-    paddingTopAdded = 0;
   };
 
   const printLine = (line: string): void => {
     if (!line) {
-      requestPaddingTop();
+      requestPadding();
     } else {
       if (line !== lastMessage) {
         padAll();
