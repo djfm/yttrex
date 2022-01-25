@@ -8,7 +8,7 @@ import { getChromePath } from '@guardoni/guardoni/utils';
 import { generateDirectoryStructure, MinimalProjectConfig } from '.';
 
 import { decodeOrThrow, rightOrThrow } from '@util/fp';
-import { fileExists } from '@util/general';
+import { fileExists } from '@util/fs';
 import createLogger from '@util/logger';
 import { createPage } from '@util/page';
 

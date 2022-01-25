@@ -1,35 +1,31 @@
 import fs from 'fs';
-import { cp, stat } from 'fs/promises';
+import { cp, readdir, stat } from 'fs/promises';
 import { join } from 'path';
 
 /**
- * Create a function that returns a function accepting a map of
- * source file names to destination file names that will copy
- * the source files from {fromDirectory} to {toDirectory}.
+ * Copy the files (not the directories)
+ * from the source directory to the destination directory.
  *
- * E.g.:
- *
- * const from = 'src';
- * const to = 'dist';
- *
- * await makeCopyFromTo(from, to)({
- *  'foo.js': 'bar.js',
- *  'baz.js': 'qux.js',
- * });
- *
- * Will copy:
- * - src/foo.js to dist/bar.js
- * - src/baz.js to dist/qux.js
+ * Does not recurse.
  */
-export const copyFromTo =
-  (fromDirectory: string, toDirectory: string) =>
-    async(map: Record<string, string>): Promise<void> => {
-      await Promise.all(
-        Object.entries(map).map(([from, to]) =>
-          cp(join(fromDirectory, from), join(toDirectory, to)),
-        ),
-      );
-    };
+export const flatCopyFiles = async(
+  srcDirectory: string,
+  dstDirectory: string,
+): Promise<void> => {
+  const files = await readdir(srcDirectory, { withFileTypes: true });
+
+  const promises = files
+    .filter((file) => file.isFile())
+    .map((file) => {
+      const srcPath = join(srcDirectory, file.name);
+
+      const dstPath = join(dstDirectory, file.name);
+
+      return cp(srcPath, dstPath);
+    });
+
+  await Promise.all(promises);
+};
 
 export const fileExists = async(path: string): Promise<boolean> => {
   try {
