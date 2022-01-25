@@ -27,4 +27,5 @@ export const generateDirectoryStructure = (
   profileDirectory: join(projectDirectory, 'profile'),
   projectDirectory,
   extensionDirectory: join(projectDirectory, 'profile/tx.extension'),
+  databaseDirectory: join(projectDirectory, 'database'),
 });

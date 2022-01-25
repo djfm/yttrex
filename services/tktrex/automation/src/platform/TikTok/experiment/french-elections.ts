@@ -42,7 +42,13 @@ export const FrenchElections: ExperimentDescriptor = {
       experimentType,
     });
   },
-  run: async({ page, logger, projectDirectory, project: minimalConfig }) => {
+  run: async({
+    page,
+    logger,
+    projectDirectory,
+    project: minimalConfig,
+    saveSnapshot,
+  }) => {
     const project = decodeOrThrow(Config)(minimalConfig);
 
     // TODO: how can this be made type safe?
@@ -67,6 +73,8 @@ export const FrenchElections: ExperimentDescriptor = {
       await page.keyboard.press('Enter');
       await handleCaptcha();
       await sleep(5000);
+
+      await saveSnapshot();
     }
 
     return page;

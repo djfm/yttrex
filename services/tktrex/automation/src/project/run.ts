@@ -11,16 +11,19 @@ import { decodeOrThrow, rightOrThrow } from '@util/fp';
 import { fileExists } from '@util/fs';
 import createLogger from '@util/logger';
 import { createPage } from '@util/page';
+import { Snapshot } from '@scraper/lib';
+import initDb from '@project/db';
 
 import experimentDescriptors, {
   experimentTypes,
 } from '@experiment/descriptors';
 
-export interface RunOptions {
+interface RunOptions {
   projectDirectory: string;
 }
 
 export const run = async({ projectDirectory }: RunOptions): Promise<void> => {
+  const db = await initDb(projectDirectory);
   const logger = createLogger();
   const configPath = join(projectDirectory, 'config.yaml');
 
@@ -63,11 +66,26 @@ export const run = async({ projectDirectory }: RunOptions): Promise<void> => {
         logger,
       });
 
+      const saveSnapshot = async(metaData: unknown): Promise<void> => {
+        const snap: Snapshot = {
+          type: 'Snapshot',
+          experimentType: rawConfig.experimentType,
+          url: page.url(),
+          html: await page.content(),
+          scrapedOn: new Date(),
+          metaData,
+          _id: undefined,
+        };
+
+        await db.save(snap);
+      };
+
       await experiment.run({
         projectDirectory,
         logger,
         page,
         project,
+        saveSnapshot,
       });
 
       await page.browser().close();
