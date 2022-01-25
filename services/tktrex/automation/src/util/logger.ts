@@ -17,6 +17,7 @@ export const createLogger = (): Logger => {
   let paddingBottomRequested = 0;
   let lastMessage: string | undefined;
   let paddingTopAdded = 0;
+  let indent = 0;
 
   const requestPaddingTop = (): void => {
     paddingTopRequested = Math.min(maxVSPace, paddingTopRequested + 1);
@@ -28,10 +29,12 @@ export const createLogger = (): Logger => {
 
   const startGroup = (): void => {
     requestPaddingTop();
+    indent += 1;
   };
 
   const endGroup = (): void => {
     requestPaddingBottom();
+    indent -= 1;
   };
 
   const padOne = (): void => {
@@ -63,8 +66,13 @@ export const createLogger = (): Logger => {
       if (line !== lastMessage) {
         padAll();
       }
+
       lastMessage = line;
-      console.log(line);
+
+      const indentation = Array.from({ length: indent })
+        .map(() => '  ').join('');
+
+      console.log(`${indentation}${line}`);
     }
   };
 
