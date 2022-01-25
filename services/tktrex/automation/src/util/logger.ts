@@ -13,58 +13,83 @@ const toStringGroups = (x: unknown[]): string[][] =>
 export const createLogger = (): Logger => {
   const maxVSPace = 2;
 
-  let lineBreaksToPrepend = 0;
-  let lineBreaksPrepended = 0;
+  let paddingTopRequested = 0;
+  let paddingBottomRequested = 0;
+  let lastMessage: string | undefined;
+  let paddingTopAdded = 0;
 
-  const requestLineBreak = (): void => {
-    lineBreaksToPrepend = Math.min(maxVSPace, lineBreaksToPrepend + 1);
+  const requestPaddingTop = (): void => {
+    paddingTopRequested = Math.min(maxVSPace, paddingTopRequested + 1);
   };
 
-  const prependLineBreak = (): void => {
-    if (lineBreaksPrepended < lineBreaksToPrepend) {
-      console.log();
-      lineBreaksPrepended += 1;
+  const requestPaddingBottom = (): void => {
+    paddingBottomRequested = Math.min(maxVSPace, paddingBottomRequested + 1);
+  };
 
-      if (lineBreaksPrepended === lineBreaksToPrepend) {
-        lineBreaksToPrepend = 0;
-        lineBreaksPrepended = 0;
+  const startGroup = (): void => {
+    requestPaddingTop();
+  };
+
+  const endGroup = (): void => {
+    requestPaddingBottom();
+  };
+
+  const padOne = (): void => {
+    if (paddingTopRequested > 0) {
+      console.log('');
+      paddingTopRequested -= 1;
+      paddingTopAdded += 1;
+
+      if (paddingTopRequested === 0) {
+        paddingTopRequested = paddingBottomRequested;
+        paddingBottomRequested = 0;
       }
     }
   };
 
-  const print = (line: string): void => {
+  const padAll = (): void => {
+    // This lint is wrong here.
+    // eslint-disable-next-line no-unmodified-loop-condition
+    while (paddingTopRequested - paddingTopAdded > 0) {
+      padOne();
+    }
+    paddingTopAdded = 0;
+  };
+
+  const printLine = (line: string): void => {
     if (!line) {
-      prependLineBreak();
+      requestPaddingTop();
     } else {
-      for (let i = lineBreaksPrepended; i < lineBreaksToPrepend; i += 1) {
-        prependLineBreak();
+      if (line !== lastMessage) {
+        padAll();
       }
+      lastMessage = line;
       console.log(line);
+    }
+  };
+
+  const wrapVerticallyIf = (shouldWrap: boolean, cb: () => void): void => {
+    if (shouldWrap) {
+      startGroup();
+    }
+    cb();
+    if (shouldWrap) {
+      endGroup();
     }
   };
 
   const log = (...lines: unknown[]): void => {
     const groups = toStringGroups(lines);
 
-    if (lines.length > 1) {
-      requestLineBreak();
-    }
-
-    for (const group of groups) {
-      if (group.length > 1) {
-        requestLineBreak();
+    wrapVerticallyIf(lines.length > 1, () => {
+      for (const group of groups) {
+        wrapVerticallyIf(group.length > 1, () => {
+          for (const line of group) {
+            printLine(line);
+          }
+        });
       }
-      for (const line of group) {
-        print(line);
-      }
-      if (group.length > 1) {
-        requestLineBreak();
-      }
-    }
-
-    if (lines.length > 1) {
-      requestLineBreak();
-    }
+    });
   };
 
   return {

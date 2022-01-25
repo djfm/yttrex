@@ -72,7 +72,7 @@ export const run = async({ projectDirectory }: RunOptions): Promise<void> => {
 
       await page.browser().close();
 
-      logger.log('', '...done running experiment, with success!', '');
+      logger.log('', '...done running experiment, with success!');
     }
   }
 
