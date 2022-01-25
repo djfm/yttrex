@@ -2,9 +2,13 @@ import { Page } from 'puppeteer';
 
 import { askConfirmation } from '../../../util/page';
 
-import { sleep } from '@util/general';
+import { sleep } from '@util/misc';
 import { Logger } from '@util/logger';
 
+/**
+ * Returns a promise that resolves to true if the user is logged in,
+ * and false otherwise. It should not reject.
+ */
 export const isLoggedIn = async(
   page: Page,
   timeout = 5000,
