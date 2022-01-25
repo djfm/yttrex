@@ -1,3 +1,5 @@
+import os from 'os';
+
 import puppeteerVanilla, { Page, Dialog } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import stealth from 'puppeteer-extra-plugin-stealth';
@@ -150,12 +152,18 @@ export const fillInput = async(
   selector: string,
   value: string,
 ): Promise<Page> => {
-  await page.waitForSelector(selector);
+  const element = await page.waitForSelector(selector);
   await page.focus(selector);
-  await page.keyboard.down('Control');
-  await page.keyboard.press('A');
-  await page.keyboard.up('Control');
-  await page.keyboard.press('Backspace');
+  if (os.platform() === 'darwin' && element) {
+    await element.click({ clickCount: 3 });
+    await page.keyboard.press('Backspace');
+  } else {
+    await page.keyboard.down('Control');
+    await page.keyboard.press('A');
+    await page.keyboard.up('Control');
+    await page.keyboard.press('Backspace');
+  }
+
   await typeLikeAHuman(page, value);
 
   return page;
