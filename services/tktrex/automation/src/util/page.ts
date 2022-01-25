@@ -48,15 +48,12 @@ export const createPage = async({
   };
 
   logger.log(
-    '',
     'Starting puppeteer with options:',
     options,
     '',
     useStealth ? 'Using stealth mode.' : 'Not using stealth mode.',
-    '',
   );
 
-  logger.log('strong:', 'using stealth mode?', useStealth);
   const p = useStealth ? puppeteer : puppeteerVanilla;
 
   const browser = await p.launch(options);
