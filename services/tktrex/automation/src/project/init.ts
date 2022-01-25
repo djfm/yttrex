@@ -1,31 +1,25 @@
 import { mkdir } from 'fs/promises';
 
-import { isEmptyDirectoryOrDoesNotExist, shellEscape } from '../util/general';
-
-import { createLogger } from '../util/logger';
-
-import initTikTokProject from '../platform/TikTok/project';
-
-export const experimentTypes = ['tt-french-elections'] as const;
-
-export type ExperimentType = typeof experimentTypes[number];
+import { isEmptyDirectoryOrDoesNotExist, shellEscape } from '@util/general';
+import { createLogger } from '@util/logger';
+import experimentDescriptors from '@experiment/descriptors';
 
 const logger = createLogger();
 
-export interface initOptions {
-  directory: string;
+interface InitOptions {
+  projectDirectory: string;
   experimentType: string;
 }
 
 export const init = async({
-  directory,
+  projectDirectory,
   experimentType,
-}: initOptions): Promise<void> => {
+}: InitOptions): Promise<void> => {
   logger.log(
-    `Initializing "${experimentType}" experiment in "${directory}"...`,
+    `Initializing "${experimentType}" experiment in "${projectDirectory}"...`,
   );
 
-  const ok = await isEmptyDirectoryOrDoesNotExist(directory);
+  const ok = await isEmptyDirectoryOrDoesNotExist(projectDirectory);
 
   if (ok !== true) {
     const msg =
@@ -34,19 +28,23 @@ export const init = async({
         : 'the provided path is not a directory';
 
     logger.log(`..failed: ${msg}.`);
-    throw new Error(`${msg}: "${directory}"`);
+    throw new Error(`${msg}: "${projectDirectory}"`);
   }
 
-  await mkdir(directory, { recursive: true });
+  await mkdir(projectDirectory, { recursive: true });
 
-  switch (experimentType) {
-  case 'tt-french-elections':
-    await initTikTokProject({
-      directory,
-      experimentType,
-    });
-    break;
-  default:
+  let initialized = false;
+  for (const experiment of experimentDescriptors) {
+    if (experiment.experimentType === experimentType) {
+      await experiment.init({
+        projectDirectory,
+        logger,
+      });
+      initialized = true;
+    }
+  }
+
+  if (!initialized) {
     throw new Error(`unknown experiment type: "${experimentType}"`);
   }
 
@@ -58,7 +56,7 @@ export const init = async({
     'Once you\'re happy with the settings, to run the experiment,',
     'just execute the following command:',
     '',
-    `yarn automate run ${shellEscape(directory)}`,
+    `yarn automate run ${shellEscape(projectDirectory)}`,
   );
 };
 

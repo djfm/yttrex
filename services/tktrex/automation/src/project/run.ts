@@ -3,23 +3,33 @@ import { join } from 'path';
 
 import yaml from 'yaml';
 
-import { fileExists } from '../util/general';
-import { createLogger } from '../util/logger';
-import { run as tikTokRun } from '../platform/TikTok/project';
-import { experimentTypes } from './init';
+import { getChromePath } from '@guardoni/guardoni/utils';
+
+import {
+  generateDirectoryStructure,
+  MinimalProjectConfig,
+} from '.';
+
+import { decodeOrThrow, rightOrThrow } from '@util/fp';
+import { fileExists } from '@util/general';
+import createLogger from '@util/logger';
+import { createPage } from '@util/page';
+
+import experimentDescriptors, {
+  experimentTypes,
+} from '@experiment/descriptors';
 
 export interface RunOptions {
-  directory: string;
+  projectDirectory: string;
 }
 
-export const run = async({ directory }: RunOptions): Promise<void> => {
+export const run = async({ projectDirectory }: RunOptions): Promise<void> => {
   const logger = createLogger();
-
-  const configPath = join(directory, 'config.yaml');
+  const configPath = join(projectDirectory, 'config.yaml');
 
   if (!(await fileExists(configPath))) {
     throw new Error(
-      `config.yaml not found in "${directory}", was the project initialized?`,
+      `"config.yaml" not found in "${projectDirectory}", was the project initialized?`,
     );
   }
 
@@ -29,23 +39,47 @@ export const run = async({ directory }: RunOptions): Promise<void> => {
     throw new Error(`unknown experiment type: "${rawConfig.experimentType}"`);
   }
 
+  const project = decodeOrThrow(
+    MinimalProjectConfig,
+  )(rawConfig);
+
   logger.log(
-    `Running "${rawConfig.experimentType}" experiment in "${directory}"...`,
+    `Running "${rawConfig.experimentType}" experiment in "${projectDirectory}"...`,
   );
 
-  if (rawConfig.experimentType.startsWith('tt-')) {
-    const page = await tikTokRun({
-      directory,
-      rawConfig,
-    });
+  const {
+    profileDirectory, extensionDirectory,
+  } = generateDirectoryStructure(projectDirectory);
 
-    await page.browser().close();
+  const chromePath = rightOrThrow(getChromePath());
 
-    logger.log('Done running experiment!');
-    process.exit(0);
+  let foundExperiment = false;
+  for (const experiment of experimentDescriptors) {
+    if (experiment.experimentType === rawConfig.experimentType) {
+      foundExperiment = true;
+
+      const page = await createPage({
+        chromePath,
+        profileDirectory,
+        extensionDirectory,
+        proxy: project.proxy,
+        useStealth: project.useStealth,
+      });
+
+      await experiment.run({
+        projectDirectory,
+        logger,
+        page,
+        project,
+      });
+
+      await page.browser().close();
+    }
   }
 
-  throw new Error(`unknown experiment type: "${rawConfig.experimentType}"`);
+  if (!foundExperiment) {
+    throw new Error(`unknown experiment type: "${rawConfig.experimentType}"`);
+  }
 };
 
 export default run;

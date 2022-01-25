@@ -1,9 +1,9 @@
 import { Page } from 'puppeteer';
 
-import { askConfirmation } from '../../util/page';
+import { askConfirmation } from '../../../util/page';
 
-import { sleep } from '../../util/general';
-import { Logger } from '../../util/logger';
+import { sleep } from '../../../util/general';
+import { Logger } from '../../../util/logger';
 
 export const isLoggedIn = async(
   page: Page,
