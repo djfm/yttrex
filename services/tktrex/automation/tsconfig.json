@@ -17,7 +17,11 @@
     "paths": {
       "@shared/*": ["../../../../packages/shared/src/*"],
       "@tktrex/*": ["../../shared/src/*"],
-      "@guardoni/*": ["../../../../guardoni/src/*"]
+      "@guardoni/*": ["../../../../guardoni/src/*"],
+      "@experiment/*": ["./experiment/*"],
+      "@project/*": ["./project/*"],
+      "@util/*": ["./util/*"],
+      "@TikTok/*": ["./platform/TikTok/*"]
     }
   },
   "references": [

@@ -1,18 +1,18 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import init, { experimentTypes } from './project/init';
-
-import run from './project/run';
+import { experimentTypes } from '@experiment/descriptors';
+import init from '@project/init';
+import run from '@project/run';
 
 const menu = yargs(hideBin(process.argv))
   .scriptName('tktrex-automation')
   .command(
-    'init [directory]',
+    'init [projectDirectory]',
     'Initialize an experiment directory',
     (y) =>
       y
-        .positional('directory', {
+        .positional('projectDirectory', {
           default: '.',
           desc: 'Directory to initialize, current directory if empty',
           type: 'string',
@@ -28,10 +28,10 @@ const menu = yargs(hideBin(process.argv))
     (args) => init(args),
   )
   .command(
-    'run [directory]',
+    'run [projectDirectory]',
     'Run an experiment from a directory previously initialized',
     (y) =>
-      y.positional('directory', {
+      y.positional('projectDirectory', {
         default: '.',
         desc: 'Directory containing the initialized experiment to run, current directory if empty',
         type: 'string',
