@@ -2,7 +2,7 @@ import { join } from 'path';
 
 import * as t from 'io-ts';
 
-import { ExperimentDescriptor } from '@experiment/index';
+import { ExperimentDescriptor } from '@experiment';
 import { decodeOrThrow } from '@util/fp';
 import { sleep } from '@util/misc';
 import { createHandleCaptcha, ensureLoggedIn } from '@TikTok/util/page';
@@ -16,7 +16,7 @@ import {
   confirmPublicKeyNoted,
 } from '@TikTok/util/project';
 
-import { MinimalProjectConfig } from '@project/index';
+import { MinimalProjectConfig } from '@project';
 
 const Config = t.intersection(
   [

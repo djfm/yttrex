@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import PouchDB from 'pouchdb';
 
-import { Snapshot } from '../scraper/lib';
+import { Snapshot } from '../scraper';
 import { generateDirectoryStructure } from '@project/index';
 
 export interface Db {
