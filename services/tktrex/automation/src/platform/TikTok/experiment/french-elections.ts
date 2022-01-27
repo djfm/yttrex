@@ -74,7 +74,10 @@ export const FrenchElections: ExperimentDescriptor = {
       await handleCaptcha();
       await sleep(5000);
 
-      await saveSnapshot();
+      await saveSnapshot({
+        baseURL: project.baseURL,
+        query,
+      });
     }
 
     return page;

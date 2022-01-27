@@ -4,6 +4,7 @@ import { hideBin } from 'yargs/helpers';
 import { experimentTypes } from '@experiment/descriptors';
 import init from '@project/init';
 import run from '@project/run';
+import dumpMetaData from '@project/dump';
 
 const menu = yargs(hideBin(process.argv))
   .scriptName('tktrex-automation')
@@ -37,6 +38,17 @@ const menu = yargs(hideBin(process.argv))
         type: 'string',
       }),
     (args) => run(args),
+  )
+  .command(
+    'dump-meta-data [projectDirectory]',
+    'Dump meta data from an experiment directory',
+    (y) =>
+      y.positional('projectDirectory', {
+        default: '.',
+        desc: 'Directory containing the experiment from which to dump the meta data',
+        type: 'string',
+      }),
+    (args) => dumpMetaData(args),
   );
 
 void menu.strictCommands().demandCommand(1, 'Please provide a command').parse();
