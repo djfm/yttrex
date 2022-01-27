@@ -11,7 +11,7 @@ import { decodeOrThrow, rightOrThrow } from '@util/fp';
 import { fileExists } from '@util/fs';
 import createLogger from '@util/logger';
 import { createPage } from '@util/page';
-import { Snapshot } from '@scraper/lib';
+import { Snapshot } from '@scraper';
 import initDb from '@project/db';
 
 import experimentDescriptors, {

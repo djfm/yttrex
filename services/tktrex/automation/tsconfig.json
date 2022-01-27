@@ -19,8 +19,11 @@
       "@tktrex/*": ["../../shared/src/*"],
       "@guardoni/*": ["../../../../guardoni/src/*"],
       "@experiment/*": ["./experiment/*"],
+      "@experiment": ["./experiment/index"],
       "@project/*": ["./project/*"],
+      "@project": ["./project/index"],
       "@scraper/*": ["./scraper/*"],
+      "@scraper": ["./scraper/index"],
       "@util/*": ["./util/*"],
       "@TikTok/*": ["./platform/TikTok/*"]
     }
