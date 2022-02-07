@@ -13,6 +13,7 @@
     "resolveJsonModule": true,
     "strict": true,
     "strictNullChecks": true,
+    "skipLibCheck": true,
     "target": "es2015",
     "paths": {
       "@shared/*": ["../../../../packages/shared/src/*"],
@@ -25,7 +26,8 @@
       "@scraper/*": ["./scraper/*"],
       "@scraper": ["./scraper/index"],
       "@util/*": ["./util/*"],
-      "@TikTok/*": ["./platform/TikTok/*"]
+      "@TikTok/*": ["./platform/TikTok/*"],
+      "@Facebook/*": ["./platform/Facebook/*"]
     }
   },
   "references": [

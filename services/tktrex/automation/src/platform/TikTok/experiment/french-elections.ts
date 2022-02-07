@@ -37,12 +37,12 @@ const experimentType = 'tt-french-elections';
 
 export const FrenchElections: ExperimentDescriptor = {
   experimentType,
-  init: async({ projectDirectory }) => {
-    await init({
+  init:({ projectDirectory, logger }) =>
+    init({
       projectDirectory,
       experimentType,
-    });
-  },
+      logger,
+    }),
   run: async({
     page,
     logger,

@@ -25,7 +25,10 @@ export const dumpMetaData = async({
     );
   }
 
-  const { metaDataDirectory } = generateDirectoryStructure(projectDirectory);
+  const { metaDataDirectory } = generateDirectoryStructure(
+    projectDirectory,
+    { withExtension: false },
+  );
 
   await mkdir(metaDataDirectory, { recursive: true });
 

@@ -16,8 +16,13 @@ export interface Db {
   findAllSnapshots: () => Promise<Snapshot[]>;
 }
 
-export const init = async(projectDirectory: string): Promise<Db> => {
-  const { databaseDirectory } = generateDirectoryStructure(projectDirectory);
+export const init = async(
+  projectDirectory: string,
+): Promise<Db> => {
+  const { databaseDirectory } = generateDirectoryStructure(
+    projectDirectory,
+    { withExtension: false },
+  );
   const pouch = new PouchDB(databaseDirectory);
 
   await pouch.createIndex({

@@ -1,36 +1,34 @@
-import { resolve } from 'path';
 import { createReadStream } from 'fs';
 import { mkdir } from 'fs/promises';
 
 import { Page } from 'puppeteer';
 import unzipper from 'unzipper';
 
-import { generateDirectoryStructure } from '@project';
+import {
+  generateDirectoryStructure,
+  getAssetPath,
+} from '@project';
+
 import { flatCopyFiles } from '@util/fs';
 import { Logger } from '@util/logger';
 import { askConfirmation } from '@util/page';
 import { ProfileState } from '@project/state';
-
-export const getAssetPath = (path: string): string =>
-  // TODO: this is brittle
-  resolve(__dirname, '../../../../assets/TikTok', path);
-
-interface InitOptions {
-  projectDirectory: string;
-  experimentType: string;
-}
+import { InitOptions } from '@experiment/index';
 
 export const init = async({
   projectDirectory,
   experimentType,
 }: InitOptions): Promise<void> => {
+  const assetPath = getAssetPath('TikTok');
   const { extensionDirectory, profileDirectory } =
-    generateDirectoryStructure(projectDirectory);
+    generateDirectoryStructure(
+      projectDirectory, { withExtension: true },
+    );
 
   await mkdir(extensionDirectory, { recursive: true });
   await mkdir(profileDirectory, { recursive: true });
 
-  const extZipPath = getAssetPath('tktrex-extension-0.2.6.zip');
+  const extZipPath = assetPath('tktrex-extension-0.2.6.zip');
 
   const stream = createReadStream(extZipPath).pipe(
     unzipper.Extract({
@@ -43,7 +41,7 @@ export const init = async({
     stream.on('error', reject);
   });
 
-  await flatCopyFiles(getAssetPath(experimentType), projectDirectory);
+  await flatCopyFiles(assetPath(experimentType), projectDirectory);
 };
 
 export const showBasicInfo = (

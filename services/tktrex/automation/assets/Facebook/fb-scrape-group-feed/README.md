@@ -1,20 +1,15 @@
-# TikTok French Elections Monitoring Experiment
+# Facebook Group Scraping Experiment
 
-This type of experiment is designed to collect data from search queries on TikTok in the context of the upcoming 2022 French presidential elections.
+This type of experiment is designed to collect data from a facebook's group feed.
 
-It will open chrome, browse the URL configured in `config.yaml` (set by default to tiktok.com/fr),
-then type in the queries contained in `queries.csv` one by one in the search bar.
-
-The script will press enter after each query, wait a bit then proceed to the next query.
-
-While doing so, the collected data will be posted to tiktok.tracking.exposed.
+It will open chrome, browse the facebook URL configured in `config.yaml` (set by default to tiktok.com/fr), then scroll the feed tp
+scrape all the posts and comments until the limit (on each run) is reached.
 
 ## Settings
 
 Feel free to explore this directory, the experiment is controlled
 by the files in this directory:
 
-- you can see and change the queries in `queries.csv`
 - you can change the base platform URL in `config.yaml`.
 - you can define a proxy server in `config.yaml`
 

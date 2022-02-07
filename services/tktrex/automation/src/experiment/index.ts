@@ -5,6 +5,7 @@ import { MinimalProjectConfig } from '@project/index';
 
 export interface InitOptions {
   projectDirectory: string;
+  experimentType: string;
   logger: Logger;
 }
 

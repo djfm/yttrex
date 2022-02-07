@@ -48,7 +48,9 @@ export const run = async({ projectDirectory }: RunOptions): Promise<void> => {
   logger.log('Full project raw configuration:', project);
 
   const { profileDirectory, extensionDirectory } =
-    generateDirectoryStructure(projectDirectory);
+    generateDirectoryStructure(projectDirectory, {
+      withExtension: false,
+    });
 
   const chromePath = rightOrThrow(getChromePath());
 
@@ -100,6 +102,7 @@ export const run = async({ projectDirectory }: RunOptions): Promise<void> => {
 
       await experiment.run({
         projectDirectory,
+        experimentType: rawConfig.experimentType,
         logger,
         page,
         project,

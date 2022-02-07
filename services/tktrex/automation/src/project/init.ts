@@ -45,6 +45,7 @@ export const init = async({
       await experiment.init({
         projectDirectory,
         logger,
+        experimentType,
       });
       initialized = true;
     }

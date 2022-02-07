@@ -1,0 +1,27 @@
+# Do not change this unless you really know what you're doing.
+experimentType: fb-scrape-group-feed
+
+# The numerical ID of the group to scrape
+groupId: # TODO: fill me in
+
+# Set to a string such as socks5://localhost:9050
+# to make puppeteer use a proxy.
+#
+# Leave it empty if you don't want to use a proxy.
+#
+# The option will be passed directly to chrome using
+# the --proxy-server flag.
+#
+# Note: this is YAML, not JSON, so you do not need
+# to wrap the string in quotes.
+proxy:
+
+# The URL to browse at the beginning of the script,
+# before starting to type the queries.
+baseURL: https://www.facebook.com
+
+# Enable the stealth mode puppeteer plugin.
+# This is useful to bypass some detections, but
+# some things do not work well with this plugin so
+# the option is offered to disable it.
+useStealth: true
